@@ -182,7 +182,7 @@ public class UnitTests {
 
     Map<Object,Object> testConfig = new HashMap<Object,Object>();
     testConfig.put( "stringMember", "stringValue" );
-    testConfig.put( "intMember", 2 );
+    testConfig.put( "intMember", 42 );
     testConfig.put( "integerMember", new Integer(42) );
     testConfig.put( "stringProp", "stringValue" );
     testConfig.put( "altStringProp", "stringValue" );
@@ -196,8 +196,8 @@ public class UnitTests {
     injector.inject( testBean, testConfig );
 
     assertThat( testBean.stringMember, is( "stringValue" ) );
-    assertThat( testBean.intMember, is( 2 ) );
-    assertThat( testBean.integerMember, is( new Integer(2) ) );
+    assertThat( testBean.intMember, is( 42 ) );
+    assertThat( testBean.integerMember, is( new Integer(42) ) );
     assertThat( testBean.stringPropField, is( "stringValue" ) );
     assertThat( testBean.stringPropFieldAlt, is( "stringValue" ) );
     assertThat( testBean.stringPropFieldAltArg, is( "stringValue" ) );

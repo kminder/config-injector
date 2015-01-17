@@ -33,7 +33,7 @@ public class MapSample {
   }
 
   static Map<String,String> config = new HashMap<String,String>();
-  static { config.put( "configField", "5" ); }
+  static { config.put( "retryLimit", "5" ); }
 
   @Test
   public void sample() {

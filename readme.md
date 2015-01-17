@@ -1,3 +1,10 @@
+ConfigurationInjector
+=====================
+A very basic framework inspired by dependency injection but targeted at simple configuration injection.  
+
+Map Example
+-----------
+This is a basic example of injecting into a class member from a Map<String,String>.
 ```java
 package net.minder.config;
 
@@ -17,7 +24,7 @@ public class MapSample {
   }
 
   static Map<String,String> config = new HashMap<String,String>();
-  static { config.put( "configField", "5" ); }
+  static { config.put( "retryLimit", "5" ); }
 
   @Test
   public void sample() {
@@ -30,6 +37,9 @@ public class MapSample {
 }
 ```
 
+Properties Example
+------------------
+This example illustrates injection from a Properties object and also specifying the binding name via the Configure annotation.
 ```java
 package net.minder.config;
 
@@ -54,9 +64,13 @@ public class PropertiesSample {
   }
 
 }
-
 ```
 
+Adapter Example
+---------------
+This example shows the use of the ConfigurationAdapter interface.
+A custom ConfigurationAdapter will be useful if none of the built-in adapters are not sufficient.
+In this contrived example the config source is an untyped Hashtable where all names are upper case. 
 ```java
 package net.minder.config;
 
@@ -81,13 +95,13 @@ public class AdapterSample {
     }
     @Override
     public String getConfigurationValue( String name ) throws ConfigurationException {
-      Object value = config.get( name );
+      Object value = config.get( name.toUpperCase() );
       return value == null ? null : value.toString();
     }
   }
 
   static Hashtable config = new Hashtable();
-  static{ config.put( "username", "somebody" ); }
+  static{ config.put( "USERNAME", "somebody" ); }
 
   @Test
   public void sample() {
@@ -100,3 +114,8 @@ public class AdapterSample {
 
 }
 ```
+
+ConfigurationAdapters
+---------------------
+Additional default ConfigurationAdapter implementations can be added via standard ServiceLoader techniques.
+The service class that needs to be declared is ConfigurationAdapterDescriptor.

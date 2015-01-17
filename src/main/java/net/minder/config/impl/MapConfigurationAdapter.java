@@ -31,7 +31,8 @@ public class MapConfigurationAdapter implements ConfigurationAdapter {
 
   @Override
   public String getConfigurationValue( String name ) {
-    return config.get( name );
+    Object value = config.get( name );
+    return value == null ? null : value.toString();
   }
 
 }

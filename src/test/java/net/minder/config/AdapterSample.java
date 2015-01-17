@@ -38,13 +38,13 @@ public class AdapterSample {
     }
     @Override
     public String getConfigurationValue( String name ) throws ConfigurationException {
-      Object value = config.get( name );
+      Object value = config.get( name.toUpperCase() );
       return value == null ? null : value.toString();
     }
   }
 
   static Hashtable config = new Hashtable();
-  static{ config.put( "username", "somebody" ); }
+  static{ config.put( "USERNAME", "somebody" ); }
 
   @Test
   public void sample() {
