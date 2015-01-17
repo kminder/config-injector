@@ -26,7 +26,7 @@ public class PropertiesFieldSample {
 
   public static class Target {
     @Configure("user.name")
-    private String username = "nobody";
+    private String user = "nobody";
   }
 
   @Test
@@ -34,7 +34,7 @@ public class PropertiesFieldSample {
     ConfigurationInjector injector = ConfigurationInjectorFactory.create();
     Target target = new Target();
     injector.inject( target, System.getProperties() );
-    assertThat( target.username, is( System.getProperty( "user.name" ) ) );
+    assertThat( target.user, is( System.getProperty( "user.name" ) ) );
   }
 
 }

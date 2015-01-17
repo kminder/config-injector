@@ -80,6 +80,7 @@ Properties Example (Field Injection)
 ------------------------------------
 This example illustrates injection from a Properties object.
 It also show specifying the binding name via the Configure annotation.
+The System.getProperties() object is used as a convenient source of configuration for this sample. 
 ```java
 package net.minder.config;
 
@@ -92,7 +93,7 @@ public class PropertiesFieldSample {
 
   public static class Target {
     @Configure("user.name")
-    private String username = "nobody";
+    private String user = "nobody";
   }
 
   @Test
@@ -100,7 +101,7 @@ public class PropertiesFieldSample {
     ConfigurationInjector injector = ConfigurationInjectorFactory.create();
     Target target = new Target();
     injector.inject( target, System.getProperties() );
-    assertThat( target.username, is( System.getProperty( "user.name" ) ) );
+    assertThat( target.user, is( System.getProperty( "user.name" ) ) );
   }
 
 }
@@ -205,3 +206,14 @@ ConfigurationAdapters
 ---------------------
 Additional default ConfigurationAdapter implementations can be added via standard ServiceLoader techniques.
 The service class that needs to be declared is ConfigurationAdapterDescriptor.
+
+The ConfigurationAdapters interface is deliberately very easy to implement.
+```java
+package net.minder.config;
+
+public interface ConfigurationAdapter {
+
+  String getConfigurationValue( String name ) throws ConfigurationException;
+
+}
+```
