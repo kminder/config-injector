@@ -1,0 +1,2 @@
+net.minder.config.impl.MapConfigurationAdapterDescriptor
+net.minder.config.impl.PropertiesConfigurationAdapterDescriptor
