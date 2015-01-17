@@ -22,7 +22,7 @@ import org.junit.Test;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public class PropertiesSample {
+public class PropertiesFieldSample {
 
   public static class Target {
     @Configure("user.name")

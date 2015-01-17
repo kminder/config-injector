@@ -25,7 +25,7 @@ import java.util.Map;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public class MapSample {
+public class MapFieldSample {
 
   public static class Target {
     @Configure

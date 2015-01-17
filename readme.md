@@ -2,8 +2,8 @@ ConfigurationInjector
 =====================
 A very basic framework inspired by dependency injection but targeted at simple configuration injection.  
 
-Map Example
------------
+Map Example (Field Injection)
+-----------------------------
 This is a basic example of injecting into a class member from a Map<String,String>.
 ```java
 package net.minder.config;
@@ -16,7 +16,7 @@ import java.util.Map;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public class MapSample {
+public class MapFieldSample {
 
   public static class Target {
     @Configure
@@ -37,9 +37,49 @@ public class MapSample {
 }
 ```
 
-Properties Example
-------------------
-This example illustrates injection from a Properties object and also specifying the binding name via the Configure annotation.
+Map Example (Method Injection)
+------------------------------
+This is a basic example of injecting via a method from a Map<String,String>.
+```java
+package net.minder.config;
+
+import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+
+public class MapMethodSample {
+
+  public static class Target {
+    private int limit = 3;
+
+    @Configure
+    public void setRetryLimit( int value ) {
+      limit = value;
+    }
+  }
+
+  static Map<String,String> config = new HashMap<String,String>();
+  static { config.put( "retryLimit", "5" ); }
+
+  @Test
+  public void sample() {
+    ConfigurationInjector injector = ConfigurationInjectorFactory.create();
+    Target target = new Target();
+    injector.inject( target, config );
+    assertThat( target.limit, is(5) );
+  }
+
+}
+```
+
+Properties Example (Field Injection)
+------------------------------------
+This example illustrates injection from a Properties object.
+It also show specifying the binding name via the Configure annotation.
 ```java
 package net.minder.config;
 
@@ -48,7 +88,7 @@ import org.junit.Test;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public class PropertiesSample {
+public class PropertiesFieldSample {
 
   public static class Target {
     @Configure("user.name")
@@ -61,6 +101,52 @@ public class PropertiesSample {
     Target target = new Target();
     injector.inject( target, System.getProperties() );
     assertThat( target.username, is( System.getProperty( "user.name" ) ) );
+  }
+
+}
+```
+
+Properties Example (Method Injection)
+-------------------------------------
+This example demonstrates method injection with name binding for methods with a single and multiple parameters. 
+```java
+package net.minder.config;
+
+import org.junit.Test;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+
+public class PropertiesMethodSample {
+
+  public static class Target {
+
+    private String user = "nobody";
+    private String home = "nowhere";
+    private String temp = "nowhere";
+
+    @Configure("user.name")
+    public void setUser( String value ) {
+      user = value;
+    }
+
+    @Configure
+    public void setDirs(
+        @Configure("home.dir") String home,
+        @Configure("temp.dir") String temp ) {
+      this.home = home;
+      this.temp = temp;
+    }
+  }
+
+  @Test
+  public void sample() {
+    ConfigurationInjector injector = ConfigurationInjectorFactory.create();
+    Target target = new Target();
+    injector.inject( target, System.getProperties() );
+    assertThat( target.user, is( System.getProperty( "user.name" ) ) );
+    assertThat( target.home, is( System.getProperty( "home.dir" ) ) );
+    assertThat( target.temp, is( System.getProperty( "temp.dir" ) ) );
   }
 
 }
