@@ -1,4 +1,4 @@
-```
+```java
 package net.minder.config;
 
 import org.junit.Test;
@@ -30,7 +30,7 @@ public class MapSample {
 }
 ```
 
-```
+```java
 package net.minder.config;
 
 import org.junit.Test;
@@ -57,7 +57,7 @@ public class PropertiesSample {
 
 ```
 
-```
+```java
 package net.minder.config;
 
 import org.junit.Test;
