@@ -26,5 +26,6 @@ import java.lang.annotation.Target;
 @Target( { ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER} )
 @Retention( RetentionPolicy.RUNTIME )
 @Documented
-public @interface Configure {
+public @interface Alias {
+  public String value() default "";
 }

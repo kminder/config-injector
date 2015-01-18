@@ -24,9 +24,13 @@ import java.util.Map;
 import java.util.Properties;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.core.AllOf.allOf;
 import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.fail;
 
-public class UnitTests {
+public class UnitTest {
 
   public static class TestBean {
     @Configure
@@ -44,23 +48,24 @@ public class UnitTests {
     }
     protected String stringPropField = "stringDefault";
 
-    @Configure("altStringProp")
+    @Configure
+    @Alias("altStringProp")
     public void setNamedStringProp( String s ) {
       stringPropFieldAlt = s;
     }
     protected String stringPropFieldAlt = "stringDefault";
 
     @Configure
-    public void setNamedArgMethod( @Configure("altArgStringProp") String s ) {
+    public void setNamedArgMethod( @Configure @Alias("altArgStringProp") String s ) {
       stringPropFieldAltArg = s;
     }
     protected String stringPropFieldAltArg = "stringDefault";
 
     @Configure
     public void setMultiArgs(
-        @Configure("multiArg1") String s,
-        @Configure("multiArg2") Integer i,
-        @Configure("multiArg3") int n ) {
+        @Configure @Alias("multiArg1") String s,
+        @Configure @Alias("multiArg2") Integer i,
+        @Configure @Alias("multiArg3") int n ) {
       multiArgStringField = s;
       multiArgIntegerField = i;
       multiArgIntField = n;
@@ -88,7 +93,7 @@ public class UnitTests {
 
     TestBean testBean = new TestBean();
 
-    injector.inject( testBean, testConfig );
+    injector.configure( testBean, testConfig );
 
     assertThat( testBean.stringMember, is( "stringValue" ) );
     assertThat( testBean.intMember, is( 2 ) );
@@ -118,7 +123,7 @@ public class UnitTests {
 
     TestBean testBean = new TestBean();
 
-    injector.inject( testBean, testConfig );
+    injector.configure( testBean, testConfig );
 
     assertThat( testBean.stringMember, is( "stringValue" ) );
     assertThat( testBean.intMember, is( 2 ) );
@@ -163,7 +168,7 @@ public class UnitTests {
 
     TestBean testBean = new TestBean();
 
-    injector.inject( testBean, new TestAdapter(testConfig) );
+    injector.configure( testBean, new TestAdapter( testConfig ) );
 
     assertThat( testBean.stringMember, is( "stringValue" ) );
     assertThat( testBean.intMember, is( 2 ) );
@@ -193,7 +198,7 @@ public class UnitTests {
 
     TestBean testBean = new TestBean();
 
-    injector.inject( testBean, testConfig );
+    injector.configure( testBean, testConfig );
 
     assertThat( testBean.stringMember, is( "stringValue" ) );
     assertThat( testBean.intMember, is( 42 ) );
@@ -204,6 +209,115 @@ public class UnitTests {
     assertThat( testBean.multiArgStringField, is( "stringValue" ) );
     assertThat( testBean.multiArgIntegerField, is( 42 ) );
     assertThat( testBean.multiArgIntField, is( 42 ) );
+  }
+
+  public class Target {
+    @Configure @Alias("user.name")
+    private String user;
+  }
+
+  public class Adapter implements ConfigurationAdapter {
+    @Override
+    public String getConfigurationValue( String name ) throws ConfigurationException {
+      return System.getProperty( name );
+    }
+  }
+
+  @Test
+  public void testFactoryConfigurationDirect() {
+    Target target = new Target();
+    ConfigurationInjectorFactory.configure( target, System.getProperties() );
+    assertThat( target.user, is( System.getProperty( "user.name" ) ) );
+  }
+
+  @Test
+  public void testFactoryConfigurationAdapter() {
+    Target target = new Target();
+    ConfigurationInjectorFactory.configure( target, new Adapter() );
+    assertThat( target.user, is( System.getProperty( "user.name" ) ) );
+  }
+
+  @Test
+  public void testMissingRequiredFieldConfiguration() {
+    class RequiredFieldTarget {
+      @Configure
+      private String required;
+    }
+    RequiredFieldTarget target = new RequiredFieldTarget();
+    try {
+      ConfigurationInjectorFactory.configure( target, System.getProperties() );
+      fail( "Expected an exception because the configuration values could not be populated." );
+    } catch ( ConfigurationException e ) {
+      assertThat( e.getMessage(), allOf(containsString("Failed"),containsString( "find" ),containsString( "required" )) );
+    }
+  }
+
+  @Test
+  public void testMissingOptionalFieldConfiguration() {
+    class OptionalFieldTarget {
+      @Configure
+      @Optional
+      private String optional = "default";
+    }
+    OptionalFieldTarget target = new OptionalFieldTarget();
+    ConfigurationInjectorFactory.configure( target, System.getProperties() );
+    assertThat( target.optional, is("default") );
+  }
+
+  @Test
+  public void testMissingRequiredConfigurationParameter() {
+    class Target {
+      private String field;
+      @Configure
+      public void setRequired(String value) {
+        field = value;
+      }
+    }
+    Target target = new Target();
+    try {
+      ConfigurationInjectorFactory.configure( target, System.getProperties() );
+      fail( "Expected an exception because the configuration values could not be populated." );
+    } catch ( ConfigurationException e ) {
+      assertThat( e.getMessage(), allOf(containsString("Failed"),containsString( "find" ),containsString( "required" )) );
+    }
+  }
+
+  @Test
+  public void testMissingRequiredConfigurationParameterWithDefault() {
+    class Target {
+      private String field;
+      @Configure
+      public void setRequired(@Default("default")String value) {
+        field = value;
+      }
+    }
+    Target target = new Target();
+    ConfigurationInjectorFactory.configure( target, System.getProperties() );
+    assertThat( target.field, is("default") );
+  }
+
+  @Test
+  public void testTwoMissingRequiredConfigurationParameterWithDefault() {
+    class Target {
+      private String field1;
+      private String field2;
+      @Configure
+      public void setRequired(@Default("default1")String value1, @Default("default2")String value2) {
+        field1 = value1;
+        field2 = value2;
+      }
+    }
+    Target target = new Target();
+    ConfigurationInjectorFactory.configure( target, System.getProperties() );
+    assertThat( target.field1, is("default1") );
+    assertThat( target.field2, is("default2") );
+  }
+
+  @Test
+  public void testNameField() {
+    class Target {
+      private String field;
+    }
   }
 
 }

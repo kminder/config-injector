@@ -17,12 +17,15 @@
  */
 package net.minder.config.impl;
 
-import org.apache.commons.beanutils.ConvertUtilsBean2;
+import net.minder.config.Alias;
 import net.minder.config.ConfigurationAdapter;
 import net.minder.config.ConfigurationAdapterFactory;
 import net.minder.config.ConfigurationException;
 import net.minder.config.ConfigurationInjector;
 import net.minder.config.Configure;
+import net.minder.config.Default;
+import net.minder.config.Optional;
+import org.apache.commons.beanutils.ConvertUtilsBean2;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -33,7 +36,7 @@ public class DefaultConfigurationInjector implements ConfigurationInjector {
   ConvertUtilsBean2 converter = new ConvertUtilsBean2();
 
   @Override
-  public void inject( Object target, ConfigurationAdapter adapter )
+  public void configure( Object target, ConfigurationAdapter adapter )
       throws ConfigurationException {
     Class type = target.getClass();
     while( type != null ) {
@@ -43,97 +46,128 @@ public class DefaultConfigurationInjector implements ConfigurationInjector {
   }
 
   @Override
-  public void inject( Object target, Object config )
+  public void configure( Object target, Object config )
       throws ConfigurationException {
     ConfigurationAdapter adapter = ConfigurationAdapterFactory.get( config );
-    inject( target, adapter );
+    configure( target, adapter );
   }
 
   private void injectClass( Class type, Object instance, ConfigurationAdapter config )
       throws ConfigurationException {
     Field[] fields = type.getDeclaredFields();
     for( Field field : fields ) {
-      injectField( field, instance, config );
+      injectFieldValue( field, instance, config );
     }
     Method[] methods = type.getDeclaredMethods();
     for( Method method : methods ) {
-      injectMethod( method, instance, config );
+      injectMethodValue( method, instance, config );
     }
   }
 
-  private void injectField( Field field, Object instance, ConfigurationAdapter adapter )
+  private void injectFieldValue( Field field, Object target, ConfigurationAdapter adapter )
       throws ConfigurationException {
     Configure annotation = field.getAnnotation( Configure.class );
-    String name = null;
     if( annotation != null ) {
-      name = getConfigName( field, annotation );
-      String strValue = null;
-      try {
-        strValue = adapter.getConfigurationValue( name );
-      } catch( Exception e ) {
-        throw new ConfigurationException( String.format(
-            "Failed to retrieve field configuration property %s for field %s of %s via %s",
-            name, field.getName(), instance.getClass().getName(), adapter.getClass().getName() ), e );
-      }
-      Object objValue = null;
-      try {
-        objValue = converter.convert( strValue, field.getType() );
-      } catch( Exception e ) {
-        throw new ConfigurationException( String.format(
-            "Failed to convert field configuration property %s of %s",
-             name, instance.getClass().getName() ), e );
-      }
-      field.setAccessible( true );
-      try {
-        field.set( instance, objValue );
-      } catch( Exception e ) {
-        throw new ConfigurationException( String.format(
-            "Failed to inject field configuration property %s of %s",
-            name, instance.getClass().getName() ), e );
+      Alias alias = field.getAnnotation( Alias.class );
+      String name = getConfigName( field, alias );
+      Object value = retrieveValue( target, name, field.getType(), adapter );
+      if( value == null ) {
+        Optional optional = field.getAnnotation( Optional.class );
+        if( optional == null ) {
+          throw new ConfigurationException( String.format(
+              "Failed to find configuration for %s of %s via %s",
+              name, target.getClass().getName(), adapter.getClass().getName() ) );
+        }
+      } else {
+        try {
+          if( !field.isAccessible() ) {
+            field.setAccessible( true );
+          }
+          field.set( target, value );
+        } catch( Exception e ) {
+          throw new ConfigurationException( String.format(
+              "Failed to inject field configuration property %s of %s",
+              name, target.getClass().getName() ), e );
+        }
       }
     }
   }
 
-  private void injectMethod( Method method, Object instance, ConfigurationAdapter adapter )
+  private void injectMethodValue( Method method, Object target, ConfigurationAdapter adapter )
       throws ConfigurationException {
     Configure methodTag = method.getAnnotation( Configure.class );
     if( methodTag != null ) {
-      String methodName = getConfigName( method, methodTag );
+      Alias aliasTag = method.getAnnotation( Alias.class );
+      String methodName = getConfigName( method, aliasTag );
       Class[] argTypes = method.getParameterTypes();
       Object[] args = new Object[ argTypes.length ];
       Annotation[][] argTags = method.getParameterAnnotations();
       for( int i=0; i<argTypes.length; i++ ) {
-        String argName = getConfigName( methodName, argTags[ i ] );
-        String strValue = null;
-        try {
-          strValue = adapter.getConfigurationValue( argName );
-        } catch( Exception e ) {
-          throw new ConfigurationException( String.format(
-              "Failed to retrieve parameter configuration property %s for method %s of %s via %s",
-              argName, methodName, instance.getClass().getName(), adapter.getClass().getName() ), e );
+        String argName = getConfigName( methodName, argTags[i] );
+        Object argValue = retrieveValue( target, argName, argTypes[i], adapter );
+        if( argValue == null ) {
+          Default defTag = findAnnotation( argTags[i], Default.class );
+          if( defTag != null ) {
+            String strValue = defTag.value();
+            argValue = convertValue( target, argName, strValue, argTypes[i] );
+          } else {
+            throw new ConfigurationException( String.format(
+                "Failed to find configuration for %s of %s via %s",
+                argName, target.getClass().getName(), adapter.getClass().getName() ) );
+          }
         }
-        Object objValue = null;
-        try {
-          objValue = converter.convert( strValue, argTypes[ i ] );
-        } catch( Exception e ) {
-          throw new ConfigurationException( String.format(
-              "Failed to convert parameter configuration property %s for method %s of %s",
-              argName, methodName, instance.getClass().getName() ), e );
-        }
-        args[ i ] = objValue;
+        args[ i ] = argValue;
       }
-      method.setAccessible( true );
+      if( !method.isAccessible() ) {
+        method.setAccessible( true );
+      }
       try {
-        method.invoke( instance, args );
+        method.invoke( target, args );
       } catch( Exception e ) {
         throw new ConfigurationException( String.format(
             "Failed to inject method configuration via %s of %s",
-            methodName, instance.getClass().getName() ), e );
+            methodName, target.getClass().getName() ), e );
       }
     }
   }
 
-  private static String pickName( String implied, Configure explicit ) {
+  private Object convertValue( Object target, String name, String strValue, Class<?> type ) {
+    Object objValue = null;
+    try {
+      objValue = converter.convert( strValue, type );
+    } catch( Exception e ) {
+      throw new ConfigurationException( String.format(
+          "Failed to convert configuration for %s of %s to %s",
+          name, target.getClass().getName(), type.getName() ), e );
+    }
+    return objValue;
+  }
+
+  private Object retrieveValue( Object target, String name, Class<?> type, ConfigurationAdapter adapter ) {
+    String strValue = null;
+    try {
+      strValue = adapter.getConfigurationValue( name );
+    } catch( Exception e ) {
+      throw new ConfigurationException( String.format(
+          "Failed to retrieve configuration for %s of %s via %s",
+          name, target.getClass().getName(), adapter.getClass().getName() ), e );
+    }
+    Object objValue = convertValue( target, name, strValue, type );
+    return objValue;
+  }
+
+  private <T extends Annotation> T findAnnotation( Annotation[] annotations, Class<T> type ) {
+    T found = null;
+    for( Annotation current : annotations ) {
+      if( type.isAssignableFrom( current.getClass() ) ) {
+        found = (T)current;
+        break;
+      }
+    }
+    return found;
+  }
+
+  private static String pickName( String implied, Alias explicit ) {
     String name = implied;
     if( explicit != null ) {
       String tagValue = explicit.value().trim();
@@ -144,18 +178,18 @@ public class DefaultConfigurationInjector implements ConfigurationInjector {
     return name;
   }
 
-  private static String getConfigName( Field field, Configure tag ) {
+  private static String getConfigName( Field field, Alias tag ) {
     return pickName( field.getName(), tag );
   }
 
   private static String getConfigName( String name, Annotation[] tags ) {
     if( tags != null ) {
       for( Annotation tag : tags ) {
-        if( tag != null && tag instanceof Configure ) {
-          Configure config = Configure.class.cast( tag );
-          String tagValue = config.value().trim();
-          if( tagValue.length() > 0 ) {
-            name = tagValue;
+        if( tag != null && tag instanceof Alias ) {
+          Alias aliasTag = Alias.class.cast( tag );
+          String aliasValue = aliasTag.value().trim();
+          if( aliasValue.length() > 0 ) {
+            name = aliasValue;
             break;
           }
         }
@@ -164,7 +198,7 @@ public class DefaultConfigurationInjector implements ConfigurationInjector {
     return name;
   }
 
-  private static String getConfigName( Method method, Configure tag ) {
+  private static String getConfigName( Method method, Alias tag ) {
     return pickName( getConfigName( method ), tag );
   }
 

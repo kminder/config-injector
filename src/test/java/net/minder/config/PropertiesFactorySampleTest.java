@@ -19,40 +19,22 @@ package net.minder.config;
 
 import org.junit.Test;
 
-import java.util.Hashtable;
-
+import static net.minder.config.ConfigurationInjectorFactory.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public class AdapterSample {
+public class PropertiesFactorySampleTest {
 
   public static class Target {
-    @Configure
-    private String username = null;
+    @Configure @Alias("user.name")
+    private String user = "nobody";
   }
-
-  public static class Adapter implements ConfigurationAdapter {
-    private Hashtable config;
-    public Adapter( Hashtable config ) {
-      this.config = config;
-    }
-    @Override
-    public String getConfigurationValue( String name ) throws ConfigurationException {
-      Object value = config.get( name.toUpperCase() );
-      return value == null ? null : value.toString();
-    }
-  }
-
-  static Hashtable config = new Hashtable();
-  static{ config.put( "USERNAME", "somebody" ); }
 
   @Test
-  public void sample() {
-    ConfigurationInjector injector = ConfigurationInjectorFactory.create();
+  public void sampleDirect() {
     Target target = new Target();
-    Adapter adapter = new Adapter( config );
-    injector.inject( target, adapter );
-    assertThat( target.username, is("somebody") );
+    configure( target, System.getProperties() );
+    assertThat( target.user, is( System.getProperty( "user.name" ) ) );
   }
 
 }

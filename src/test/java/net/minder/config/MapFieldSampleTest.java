@@ -17,14 +17,30 @@
  */
 package net.minder.config;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import org.junit.Test;
 
-@Target( { ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER} )
-@Retention( RetentionPolicy.RUNTIME )
-@Documented
-public @interface Configure {
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+
+public class MapFieldSampleTest {
+
+  public static class Target {
+    @Configure
+    private int retryLimit = 3;
+  }
+
+  static Map<String,String> config = new HashMap<String,String>();
+  static { config.put( "retryLimit", "5" ); }
+
+  @Test
+  public void sample() {
+    ConfigurationInjector injector = ConfigurationInjectorFactory.create();
+    Target target = new Target();
+    injector.configure( target, config );
+    assertThat( target.retryLimit, is(5) );
+  }
+
 }

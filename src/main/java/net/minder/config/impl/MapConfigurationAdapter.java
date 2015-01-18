@@ -23,7 +23,7 @@ import java.util.Map;
 
 public class MapConfigurationAdapter implements ConfigurationAdapter {
 
-  private Map<String,String> config;
+  private Map config;
 
   public MapConfigurationAdapter( Map map ) {
     this.config = map;

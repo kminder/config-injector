@@ -19,8 +19,8 @@ package net.minder.config;
 
 public interface ConfigurationInjector {
 
-  void inject( Object target, Object config );
+  void configure( Object target, Object config );
 
-  void inject( Object target, ConfigurationAdapter adapter );
+  void configure( Object target, ConfigurationAdapter adapter );
 
 }

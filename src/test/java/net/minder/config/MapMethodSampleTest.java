@@ -19,39 +19,32 @@ package net.minder.config;
 
 import org.junit.Test;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public class PropertiesMethodSample {
+public class MapMethodSampleTest {
 
   public static class Target {
-
-    private String user = "nobody";
-    private String home = "nowhere";
-    private String temp = "nowhere";
-
-    @Configure("user.name")
-    public void setUser( String value ) {
-      user = value;
-    }
+    private int limit = 3;
 
     @Configure
-    public void setDirs(
-        @Configure("home.dir") String home,
-        @Configure("temp.dir") String temp ) {
-      this.home = home;
-      this.temp = temp;
+    public void setRetryLimit( int value ) {
+      limit = value;
     }
   }
+
+  static Map<String,String> config = new HashMap<String,String>();
+  static { config.put( "retryLimit", "5" ); }
 
   @Test
   public void sample() {
     ConfigurationInjector injector = ConfigurationInjectorFactory.create();
     Target target = new Target();
-    injector.inject( target, System.getProperties() );
-    assertThat( target.user, is( System.getProperty( "user.name" ) ) );
-    assertThat( target.home, is( System.getProperty( "home.dir" ) ) );
-    assertThat( target.temp, is( System.getProperty( "temp.dir" ) ) );
+    injector.configure( target, config );
+    assertThat( target.limit, is(5) );
   }
 
 }

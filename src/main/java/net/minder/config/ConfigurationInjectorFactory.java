@@ -31,6 +31,14 @@ public abstract class ConfigurationInjectorFactory {
     return INSTANCE;
   }
 
+  public static void configure( Object target, Object source ) {
+    ConfigurationInjectorFactory.create().configure( target, source );
+  }
+
+  public static void configure( Object target, ConfigurationAdapter source ) {
+    ConfigurationInjectorFactory.create().configure( target, source );
+  }
+
   private static synchronized ConfigurationInjector loadImplementationClass() {
     ConfigurationInjector injector = null;
     ServiceLoader<ConfigurationInjector> loader = ServiceLoader.load( ConfigurationInjector.class );
