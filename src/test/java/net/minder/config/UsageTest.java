@@ -32,7 +32,11 @@ public class UsageTest {
   @Test
   public void testFieldBindingUsingBuilderBinding() {
     Target target = new Target();
-    configuration().target( target ).source( System.getProperties() ).bind( "user", "user.name" ).inject();
+    configuration()
+        .target( target )
+        .source( System.getProperties() )
+        .bind( "user", "user.name" )
+        .inject();
     assertThat( target.user, is(System.getProperty("user.name")));
   }
 
