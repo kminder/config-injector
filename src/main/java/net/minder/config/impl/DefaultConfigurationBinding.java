@@ -15,16 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.minder.config;
+package net.minder.config.impl;
 
-public interface ConfigurationInjector {
+import net.minder.config.ConfigurationBinding;
 
-  void configure( Object target, Object config );
+public class DefaultConfigurationBinding implements ConfigurationBinding {
 
-  void configure( Object target, Object config, ConfigurationBinding binding );
-
-  void configure( Object target, ConfigurationAdapter adapter );
-
-  void configure( Object target, ConfigurationAdapter adapter, ConfigurationBinding binding );
+  @Override
+  public String getConfigurationName( String name ) {
+    return name;
+  }
 
 }

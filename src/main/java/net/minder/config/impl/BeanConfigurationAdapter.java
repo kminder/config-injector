@@ -15,16 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.minder.config;
+package net.minder.config.impl;
 
-public interface ConfigurationInjector {
+import net.minder.config.ConfigurationAdapter;
+import net.minder.config.ConfigurationException;
 
-  void configure( Object target, Object config );
+public class BeanConfigurationAdapter implements ConfigurationAdapter {
 
-  void configure( Object target, Object config, ConfigurationBinding binding );
+  private Object bean;
 
-  void configure( Object target, ConfigurationAdapter adapter );
+  public BeanConfigurationAdapter( Object bean ) {
+    this.bean = bean;
+  }
 
-  void configure( Object target, ConfigurationAdapter adapter, ConfigurationBinding binding );
+  @Override
+  public String getConfigurationValue( String name ) throws ConfigurationException {
+    return null;
+  }
 
 }

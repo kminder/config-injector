@@ -17,14 +17,8 @@
  */
 package net.minder.config;
 
-public interface ConfigurationInjector {
+public interface ConfigurationBinding {
 
-  void configure( Object target, Object config );
-
-  void configure( Object target, Object config, ConfigurationBinding binding );
-
-  void configure( Object target, ConfigurationAdapter adapter );
-
-  void configure( Object target, ConfigurationAdapter adapter, ConfigurationBinding binding );
+  String getConfigurationName( String name );
 
 }

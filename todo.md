@@ -1,5 +1,6 @@
 ToDo
 ====
+* ConfigurationInjectorFactory.create().target( target ).source( source ).binding( binding ).configure();
 * Add @Binding(name) instead of overloading @Configure(name)
 * Add CDI example to samples.
 * Move adapters to a separate package.

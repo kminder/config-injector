@@ -20,7 +20,7 @@ package net.minder.config;
 import java.util.Iterator;
 import java.util.ServiceLoader;
 
-public abstract class ConfigurationInjectorFactory {
+public class ConfigurationInjectorFactory {
 
   private static ConfigurationInjector INSTANCE = null;
 
@@ -57,5 +57,46 @@ public abstract class ConfigurationInjectorFactory {
     }
     return injector;
   }
+
+
+//  private Object source = null;
+//  private Object target = null;
+//  private ConfigurationAdapter adapter = null;
+//  private ConfigurationBinding binding = null;
+//
+//  public static ConfigurationInjectorFactory create() {
+//    return new ConfigurationInjectorFactory();
+//  }
+//
+//  public ConfigurationInjectorFactory target( Object target ) {
+//    this.target = target;
+//    return this;
+//  }
+//
+//  public ConfigurationInjectorFactory source( Object source ) {
+//    this.source = source;
+//    return this;
+//  }
+//
+//  public ConfigurationInjectorFactory adapter( ConfigurationAdapter adapter ) {
+//    this.adapter = adapter;
+//    return this;
+//  }
+//
+//  public ConfigurationInjectorFactory adapter( ConfigurationBinding binding ) {
+//    this.binding = binding;
+//    return this;
+//  }
+//
+//  public void configure() throws ConfigurationException {
+//    ConfigurationInjector injector = new DefaultConfigurationInjector();
+//    if( adapter == null ) {
+//      adapter = new BeanConfigurationAdapter( source );
+//    }
+//    if( binding == null ) {
+//      binding = new DefaultConfigurationBinding();
+//    }
+//    injector.configure( target, adapter, binding );
+//  }
 
 }

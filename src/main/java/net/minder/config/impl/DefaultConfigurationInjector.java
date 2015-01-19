@@ -20,6 +20,7 @@ package net.minder.config.impl;
 import net.minder.config.Alias;
 import net.minder.config.ConfigurationAdapter;
 import net.minder.config.ConfigurationAdapterFactory;
+import net.minder.config.ConfigurationBinding;
 import net.minder.config.ConfigurationException;
 import net.minder.config.ConfigurationInjector;
 import net.minder.config.Configure;
@@ -33,50 +34,63 @@ import java.lang.reflect.Method;
 
 public class DefaultConfigurationInjector implements ConfigurationInjector {
 
-  ConvertUtilsBean2 converter = new ConvertUtilsBean2();
+  private static ConfigurationBinding DEFAULT_BINDING = new DefaultConfigurationBinding();
+  private static ConvertUtilsBean2 DEFAULT_CONVERTER = new ConvertUtilsBean2();
 
   @Override
   public void configure( Object target, ConfigurationAdapter adapter )
       throws ConfigurationException {
+    configure( target, adapter, DEFAULT_BINDING );
+  }
+
+  @Override
+  public void configure( Object target, ConfigurationAdapter adapter, ConfigurationBinding binding )
+      throws ConfigurationException {
     Class type = target.getClass();
     while( type != null ) {
-      injectClass( type, target, adapter );
+      injectClass( type, target, adapter, binding );
       type = type.getSuperclass();
     }
   }
 
   @Override
-  public void configure( Object target, Object config )
-      throws ConfigurationException {
-    ConfigurationAdapter adapter = ConfigurationAdapterFactory.get( config );
-    configure( target, adapter );
+  public void configure( Object target, Object config ) {
+    configure( target, config, DEFAULT_BINDING );
   }
 
-  private void injectClass( Class type, Object instance, ConfigurationAdapter config )
+  @Override
+  public void configure( Object target, Object source, ConfigurationBinding binding )
+      throws ConfigurationException {
+    ConfigurationAdapter adapter = ConfigurationAdapterFactory.get( source );
+    configure( target, adapter, binding );
+  }
+
+  private void injectClass( Class type, Object target, ConfigurationAdapter config, ConfigurationBinding binding )
       throws ConfigurationException {
     Field[] fields = type.getDeclaredFields();
     for( Field field : fields ) {
-      injectFieldValue( field, instance, config );
+      injectFieldValue( field, target, config, binding );
     }
     Method[] methods = type.getDeclaredMethods();
     for( Method method : methods ) {
-      injectMethodValue( method, instance, config );
+      injectMethodValue( method, target, config, binding );
     }
   }
 
-  private void injectFieldValue( Field field, Object target, ConfigurationAdapter adapter )
+  private void injectFieldValue( Field field, Object target, ConfigurationAdapter adapter, ConfigurationBinding binding )
       throws ConfigurationException {
     Configure annotation = field.getAnnotation( Configure.class );
     if( annotation != null ) {
       Alias alias = field.getAnnotation( Alias.class );
       String name = getConfigName( field, alias );
-      Object value = retrieveValue( target, name, field.getType(), adapter );
+      String bind = getBindName( target, name, binding );
+      Object value = retrieveValue( target, bind, name, field.getType(), adapter, binding );
       if( value == null ) {
         Optional optional = field.getAnnotation( Optional.class );
         if( optional == null ) {
           throw new ConfigurationException( String.format(
-              "Failed to find configuration for %s of %s via %s",
-              name, target.getClass().getName(), adapter.getClass().getName() ) );
+              "Failed to find configuration for %s bound to %s of %s via %s",
+              bind, name, target.getClass().getName(), adapter.getClass().getName() ) );
         }
       } else {
         try {
@@ -93,7 +107,7 @@ public class DefaultConfigurationInjector implements ConfigurationInjector {
     }
   }
 
-  private void injectMethodValue( Method method, Object target, ConfigurationAdapter adapter )
+  private void injectMethodValue( Method method, Object target, ConfigurationAdapter adapter, ConfigurationBinding binding )
       throws ConfigurationException {
     Configure methodTag = method.getAnnotation( Configure.class );
     if( methodTag != null ) {
@@ -104,7 +118,8 @@ public class DefaultConfigurationInjector implements ConfigurationInjector {
       Annotation[][] argTags = method.getParameterAnnotations();
       for( int i=0; i<argTypes.length; i++ ) {
         String argName = getConfigName( methodName, argTags[i] );
-        Object argValue = retrieveValue( target, argName, argTypes[i], adapter );
+        String bndName = getBindName( target, argName, binding );
+        Object argValue = retrieveValue( target, bndName, argName, argTypes[i], adapter, binding );
         if( argValue == null ) {
           Default defTag = findAnnotation( argTags[i], Default.class );
           if( defTag != null ) {
@@ -113,7 +128,7 @@ public class DefaultConfigurationInjector implements ConfigurationInjector {
           } else {
             throw new ConfigurationException( String.format(
                 "Failed to find configuration for %s of %s via %s",
-                argName, target.getClass().getName(), adapter.getClass().getName() ) );
+                bndName, argName, target.getClass().getName(), adapter.getClass().getName() ) );
           }
         }
         args[ i ] = argValue;
@@ -134,7 +149,7 @@ public class DefaultConfigurationInjector implements ConfigurationInjector {
   private Object convertValue( Object target, String name, String strValue, Class<?> type ) {
     Object objValue = null;
     try {
-      objValue = converter.convert( strValue, type );
+      objValue = DEFAULT_CONVERTER.convert( strValue, type );
     } catch( Exception e ) {
       throw new ConfigurationException( String.format(
           "Failed to convert configuration for %s of %s to %s",
@@ -143,14 +158,14 @@ public class DefaultConfigurationInjector implements ConfigurationInjector {
     return objValue;
   }
 
-  private Object retrieveValue( Object target, String name, Class<?> type, ConfigurationAdapter adapter ) {
+  private Object retrieveValue( Object target, String bind, String name, Class<?> type, ConfigurationAdapter adapter, ConfigurationBinding binding ) {
     String strValue = null;
     try {
-      strValue = adapter.getConfigurationValue( name );
+      strValue = adapter.getConfigurationValue( bind );
     } catch( Exception e ) {
       throw new ConfigurationException( String.format(
-          "Failed to retrieve configuration for %s of %s via %s",
-          name, target.getClass().getName(), adapter.getClass().getName() ), e );
+          "Failed to retrieve configuration for %s bound to %s of %s via %s",
+          bind, name, target.getClass().getName(), adapter.getClass().getName() ), e );
     }
     Object objValue = convertValue( target, name, strValue, type );
     return objValue;
@@ -176,6 +191,21 @@ public class DefaultConfigurationInjector implements ConfigurationInjector {
       }
     }
     return name;
+  }
+
+  private static String getBindName( Object target, String name, ConfigurationBinding binding ) {
+    String bind = null;
+    try {
+      bind = binding.getConfigurationName( name );
+    } catch( Exception e ) {
+      throw new ConfigurationException( String.format(
+          "Failed to bind configuration for %s of %s via %s",
+          name, target.getClass().getName(), binding.getClass().getName() ), e );
+    }
+    if( bind == null ) {
+      bind = null;
+    }
+    return bind;
   }
 
   private static String getConfigName( Field field, Alias tag ) {

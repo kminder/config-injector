@@ -17,6 +17,7 @@
  */
 package net.minder.config;
 
+import net.minder.config.impl.MappedConfigurationBinding;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -30,7 +31,7 @@ import static org.hamcrest.core.AllOf.allOf;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.fail;
 
-public class UnitTest {
+public class FuncTests {
 
   public static class TestBean {
     @Configure
@@ -293,7 +294,7 @@ public class UnitTest {
     }
     Target target = new Target();
     ConfigurationInjectorFactory.configure( target, System.getProperties() );
-    assertThat( target.field, is("default") );
+    assertThat( target.field, is( "default" ) );
   }
 
   @Test
@@ -309,15 +310,27 @@ public class UnitTest {
     }
     Target target = new Target();
     ConfigurationInjectorFactory.configure( target, System.getProperties() );
-    assertThat( target.field1, is("default1") );
+    assertThat( target.field1, is( "default1" ) );
     assertThat( target.field2, is("default2") );
   }
 
   @Test
-  public void testNameField() {
+  public void testFieldBinding() {
     class Target {
-      private String field;
+      @Configure
+      private String user;
     }
+    class Binding extends MappedConfigurationBinding {
+      Binding() {
+        bind("user","user.name");
+      }
+    }
+    Target target = new Target();
+    Properties source = System.getProperties();
+    ConfigurationBinding binding = new Binding();
+    ConfigurationInjectorFactory.create().configure( target, source, binding );
+    assertThat( target.user, is(System.getProperty("user.name")));
+
   }
 
 }

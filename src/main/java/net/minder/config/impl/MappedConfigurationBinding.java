@@ -15,16 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.minder.config;
+package net.minder.config.impl;
 
-public interface ConfigurationInjector {
+import net.minder.config.ConfigurationBinding;
 
-  void configure( Object target, Object config );
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-  void configure( Object target, Object config, ConfigurationBinding binding );
+public class MappedConfigurationBinding implements ConfigurationBinding {
 
-  void configure( Object target, ConfigurationAdapter adapter );
+  private Map<String,String> map = new ConcurrentHashMap<String, String>();
 
-  void configure( Object target, ConfigurationAdapter adapter, ConfigurationBinding binding );
+  public void bind( String sourceName, String targetName ) {
+    map.put( sourceName, targetName );
+  }
+
+  @Override
+  public String getConfigurationName( String name ) {
+    return map.get( name );
+  }
 
 }
