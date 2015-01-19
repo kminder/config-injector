@@ -20,7 +20,7 @@ public class UsageTest {
   }
 
   @Test
-  public void testFieldBindingUsingBuilderBinding() {
+  public void usage() {
     Target target = new Target();
     configuration()
         .target( target )
