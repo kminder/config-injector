@@ -31,9 +31,8 @@ public class PropertiesFieldSampleTest {
 
   @Test
   public void sample() {
-    ConfigurationInjector injector = ConfigurationInjectorFactory.create();
     Target target = new Target();
-    injector.configure( target, System.getProperties() );
+    ConfigurationInjectorBuilder.configuration().target( target ).source( System.getProperties() ).inject();
     assertThat( target.user, is( System.getProperty( "user.name" ) ) );
   }
 

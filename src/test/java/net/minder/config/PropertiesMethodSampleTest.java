@@ -47,9 +47,8 @@ public class PropertiesMethodSampleTest {
 
   @Test
   public void sample() {
-    ConfigurationInjector injector = ConfigurationInjectorFactory.create();
     Target target = new Target();
-    injector.configure( target, System.getProperties() );
+    ConfigurationInjectorBuilder.configuration().target( target ).source( System.getProperties() ).inject();
     assertThat( target.user, is( System.getProperty( "user.name" ) ) );
     assertThat( target.home, is( System.getProperty( "user.dir" ) ) );
     assertThat( target.temp, is( System.getProperty( "java.io.tmpdir" ) ) );

@@ -19,7 +19,7 @@ package net.minder.config;
 
 import org.junit.Test;
 
-import static net.minder.config.ConfigurationInjectorFactory.*;
+import static net.minder.config.ConfigurationInjectorBuilder.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -33,7 +33,7 @@ public class PropertiesFactorySampleTest {
   @Test
   public void sampleDirect() {
     Target target = new Target();
-    configure( target, System.getProperties() );
+    configuration().target( target ).source( System.getProperties() ).inject();
     assertThat( target.user, is( System.getProperty( "user.name" ) ) );
   }
 

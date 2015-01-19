@@ -48,11 +48,10 @@ public class AdapterSampleTest {
 
   @Test
   public void sample() {
-    ConfigurationInjector injector = ConfigurationInjectorFactory.create();
     Target target = new Target();
     Adapter adapter = new Adapter( config );
-    injector.configure( target, adapter );
-    assertThat( target.username, is("somebody") );
+    ConfigurationInjectorBuilder.configuration().target( target ).source( adapter ).inject();
+    assertThat( target.username, is( "somebody" ) );
   }
 
 }

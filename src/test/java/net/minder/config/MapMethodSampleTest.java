@@ -41,10 +41,9 @@ public class MapMethodSampleTest {
 
   @Test
   public void sample() {
-    ConfigurationInjector injector = ConfigurationInjectorFactory.create();
     Target target = new Target();
-    injector.configure( target, config );
-    assertThat( target.limit, is(5) );
+    ConfigurationInjectorBuilder.configuration().target( target ).source( config ).inject();
+    assertThat( target.limit, is( 5 ) );
   }
 
 }

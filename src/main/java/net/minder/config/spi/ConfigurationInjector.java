@@ -15,12 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.minder.config;
+package net.minder.config.spi;
 
-import java.util.Map;
+import net.minder.config.ConfigurationAdapter;
+import net.minder.config.ConfigurationBinding;
 
-public interface ConfigurationAdapterDescriptor {
+public interface ConfigurationInjector {
 
-  Map<Class<?>,Class<? extends ConfigurationAdapter>> providedConfigurationAdapters();
+  void configure( Object target, ConfigurationAdapter adapter, ConfigurationBinding binding );
 
 }

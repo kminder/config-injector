@@ -19,13 +19,12 @@ package net.minder.config.impl;
 
 import net.minder.config.Alias;
 import net.minder.config.ConfigurationAdapter;
-import net.minder.config.ConfigurationAdapterFactory;
 import net.minder.config.ConfigurationBinding;
 import net.minder.config.ConfigurationException;
-import net.minder.config.ConfigurationInjector;
 import net.minder.config.Configure;
 import net.minder.config.Default;
 import net.minder.config.Optional;
+import net.minder.config.spi.ConfigurationInjector;
 import org.apache.commons.beanutils.ConvertUtilsBean2;
 
 import java.lang.annotation.Annotation;
@@ -34,14 +33,7 @@ import java.lang.reflect.Method;
 
 public class DefaultConfigurationInjector implements ConfigurationInjector {
 
-  private static ConfigurationBinding DEFAULT_BINDING = new DefaultConfigurationBinding();
   private static ConvertUtilsBean2 DEFAULT_CONVERTER = new ConvertUtilsBean2();
-
-  @Override
-  public void configure( Object target, ConfigurationAdapter adapter )
-      throws ConfigurationException {
-    configure( target, adapter, DEFAULT_BINDING );
-  }
 
   @Override
   public void configure( Object target, ConfigurationAdapter adapter, ConfigurationBinding binding )
@@ -51,18 +43,6 @@ public class DefaultConfigurationInjector implements ConfigurationInjector {
       injectClass( type, target, adapter, binding );
       type = type.getSuperclass();
     }
-  }
-
-  @Override
-  public void configure( Object target, Object config ) {
-    configure( target, config, DEFAULT_BINDING );
-  }
-
-  @Override
-  public void configure( Object target, Object source, ConfigurationBinding binding )
-      throws ConfigurationException {
-    ConfigurationAdapter adapter = ConfigurationAdapterFactory.get( source );
-    configure( target, adapter, binding );
   }
 
   private void injectClass( Class type, Object target, ConfigurationAdapter config, ConfigurationBinding binding )

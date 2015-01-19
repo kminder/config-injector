@@ -37,9 +37,8 @@ public class MapFieldSampleTest {
 
   @Test
   public void sample() {
-    ConfigurationInjector injector = ConfigurationInjectorFactory.create();
     Target target = new Target();
-    injector.configure( target, config );
+    ConfigurationInjectorBuilder.configuration().target( target ).source( config ).inject();
     assertThat( target.retryLimit, is(5) );
   }
 

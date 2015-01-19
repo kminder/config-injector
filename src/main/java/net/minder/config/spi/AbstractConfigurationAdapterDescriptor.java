@@ -15,16 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.minder.config;
+package net.minder.config.spi;
 
-public interface ConfigurationInjector {
+import net.minder.config.ConfigurationAdapter;
 
-  void configure( Object target, Object config );
+import java.util.HashMap;
+import java.util.Map;
 
-  void configure( Object target, Object config, ConfigurationBinding binding );
+public abstract class AbstractConfigurationAdapterDescriptor implements ConfigurationAdapterDescriptor {
 
-  void configure( Object target, ConfigurationAdapter adapter );
+  private static Map<Class<?>, Class<? extends ConfigurationAdapter>> ADAPTERS =
+      new HashMap<Class<?>, Class<? extends ConfigurationAdapter>>();
 
-  void configure( Object target, ConfigurationAdapter adapter, ConfigurationBinding binding );
+  protected AbstractConfigurationAdapterDescriptor() {
+  }
+
+  protected void add( Class<?> configType, Class<? extends ConfigurationAdapter> adapterType ) {
+    ADAPTERS.put( configType, adapterType );
+  }
+
+  @Override
+  public Map<Class<?>, Class<? extends ConfigurationAdapter>> providedConfigurationAdapters() {
+    return ADAPTERS;
+  }
 
 }

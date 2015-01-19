@@ -17,7 +17,7 @@
  */
 package net.minder.config.impl;
 
-import net.minder.config.AbstractConfigurationAdapterDescriptor;
+import net.minder.config.spi.AbstractConfigurationAdapterDescriptor;
 
 import java.util.Map;
 

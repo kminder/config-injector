@@ -15,7 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.minder.config;
+package net.minder.config.impl;
+
+import net.minder.config.ConfigurationAdapter;
+import net.minder.config.ConfigurationException;
+import net.minder.config.spi.ConfigurationAdapterDescriptor;
 
 import java.lang.reflect.Constructor;
 import java.util.Collections;
@@ -96,33 +100,6 @@ public class ConfigurationAdapterFactory {
     }
     return constructor;
   }
-
-//  public static Constructor findConstructorForConfigTypeOrParent(
-//      Class<?> adapterType, Class<?> configType ) throws NoSuchMethodException {
-//    Constructor constructor = null;
-//    while( configType != null ) {
-//      constructor = findConstructorForConfigType( adapterType, configType );
-//      if( constructor != null ) {
-//        break;
-//      }
-//      configType = configType.getSuperclass();
-//    }
-//    return constructor;
-//  }
-
-//  public static Constructor findConstructorForConfigType(
-//      Class<?> adapterType, Class<?> configType ) throws NoSuchMethodException {
-//    Constructor constructor = adapterType.getDeclaredConstructor( configType );
-//    if( constructor == null ) {
-//      for( Class interfaceType : configType.getInterfaces() ) {
-//        constructor = findConstructorForConfigTypeOrParent( adapterType, interfaceType );
-//        if( constructor != null ) {
-//          break;
-//        }
-//      }
-//    }
-//    return constructor;
-//  }
 
   public static Class<? extends ConfigurationAdapter> findAdapterTypeForConfigTypeOrParent(
       Map<Class<?>, Class<? extends ConfigurationAdapter>> adapters, Class<?> configType ) {

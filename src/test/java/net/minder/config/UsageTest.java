@@ -17,24 +17,23 @@
  */
 package net.minder.config;
 
-import java.util.HashMap;
-import java.util.Map;
+import org.junit.Test;
+import static net.minder.config.ConfigurationInjectorBuilder.configuration;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 
-public abstract class AbstractConfigurationAdapterDescriptor implements ConfigurationAdapterDescriptor {
+public class UsageTest {
 
-  private static Map<Class<?>, Class<? extends ConfigurationAdapter>> ADAPTERS =
-      new HashMap<Class<?>, Class<? extends ConfigurationAdapter>>();
-
-  protected AbstractConfigurationAdapterDescriptor() {
+  class Target {
+    @Configure
+    private String user;
   }
 
-  protected void add( Class<?> configType, Class<? extends ConfigurationAdapter> adapterType ) {
-    ADAPTERS.put( configType, adapterType );
-  }
-
-  @Override
-  public Map<Class<?>, Class<? extends ConfigurationAdapter>> providedConfigurationAdapters() {
-    return ADAPTERS;
+  @Test
+  public void testFieldBindingUsingBuilderBinding() {
+    Target target = new Target();
+    configuration().target( target ).source( System.getProperties() ).bind( "user", "user.name" ).inject();
+    assertThat( target.user, is(System.getProperty("user.name")));
   }
 
 }

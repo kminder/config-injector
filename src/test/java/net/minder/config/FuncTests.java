@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import static net.minder.config.ConfigurationInjectorBuilder.configuration;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
@@ -79,7 +80,6 @@ public class FuncTests {
 
   @Test
   public void testMapOfStrings() {
-    ConfigurationInjector injector = ConfigurationInjectorFactory.create();
 
     Map<String,String> testConfig = new HashMap<String,String>();
     testConfig.put( "stringMember", "stringValue" );
@@ -94,7 +94,7 @@ public class FuncTests {
 
     TestBean testBean = new TestBean();
 
-    injector.configure( testBean, testConfig );
+    configuration().target( testBean ).source( testConfig ).inject();
 
     assertThat( testBean.stringMember, is( "stringValue" ) );
     assertThat( testBean.intMember, is( 2 ) );
@@ -109,7 +109,6 @@ public class FuncTests {
 
   @Test
   public void testProperties() {
-    ConfigurationInjector injector = ConfigurationInjectorFactory.create();
 
     Properties testConfig = new Properties();
     testConfig.put( "stringMember", "stringValue" );
@@ -124,7 +123,7 @@ public class FuncTests {
 
     TestBean testBean = new TestBean();
 
-    injector.configure( testBean, testConfig );
+    configuration().target( testBean ).source( testConfig ).inject();
 
     assertThat( testBean.stringMember, is( "stringValue" ) );
     assertThat( testBean.intMember, is( 2 ) );
@@ -154,7 +153,6 @@ public class FuncTests {
 
   @Test
   public void testExplicitProvider() {
-    ConfigurationInjector injector = ConfigurationInjectorFactory.create();
 
     Map<String,String> testConfig = new HashMap<String,String>();
     testConfig.put( "stringMember", "stringValue" );
@@ -169,7 +167,7 @@ public class FuncTests {
 
     TestBean testBean = new TestBean();
 
-    injector.configure( testBean, new TestAdapter( testConfig ) );
+    configuration().target( testBean ).source( new TestAdapter( testConfig ) ).inject();
 
     assertThat( testBean.stringMember, is( "stringValue" ) );
     assertThat( testBean.intMember, is( 2 ) );
@@ -184,7 +182,6 @@ public class FuncTests {
 
   @Test
   public void testMapOfObjects() {
-    ConfigurationInjector injector = ConfigurationInjectorFactory.create();
 
     Map<Object,Object> testConfig = new HashMap<Object,Object>();
     testConfig.put( "stringMember", "stringValue" );
@@ -199,7 +196,7 @@ public class FuncTests {
 
     TestBean testBean = new TestBean();
 
-    injector.configure( testBean, testConfig );
+    configuration().target( testBean ).source( testConfig ).inject();
 
     assertThat( testBean.stringMember, is( "stringValue" ) );
     assertThat( testBean.intMember, is( 42 ) );
@@ -227,14 +224,14 @@ public class FuncTests {
   @Test
   public void testFactoryConfigurationDirect() {
     Target target = new Target();
-    ConfigurationInjectorFactory.configure( target, System.getProperties() );
+    configuration().target( target ).source( System.getProperties() ).inject();
     assertThat( target.user, is( System.getProperty( "user.name" ) ) );
   }
 
   @Test
   public void testFactoryConfigurationAdapter() {
     Target target = new Target();
-    ConfigurationInjectorFactory.configure( target, new Adapter() );
+    configuration().target( target ).source( new Adapter() ).inject();
     assertThat( target.user, is( System.getProperty( "user.name" ) ) );
   }
 
@@ -246,7 +243,7 @@ public class FuncTests {
     }
     RequiredFieldTarget target = new RequiredFieldTarget();
     try {
-      ConfigurationInjectorFactory.configure( target, System.getProperties() );
+      configuration().target( target ).source( System.getProperties() ).inject();
       fail( "Expected an exception because the configuration values could not be populated." );
     } catch ( ConfigurationException e ) {
       assertThat( e.getMessage(), allOf(containsString("Failed"),containsString( "find" ),containsString( "required" )) );
@@ -261,7 +258,7 @@ public class FuncTests {
       private String optional = "default";
     }
     OptionalFieldTarget target = new OptionalFieldTarget();
-    ConfigurationInjectorFactory.configure( target, System.getProperties() );
+    configuration().target( target ).source( System.getProperties() ).inject();
     assertThat( target.optional, is("default") );
   }
 
@@ -276,7 +273,7 @@ public class FuncTests {
     }
     Target target = new Target();
     try {
-      ConfigurationInjectorFactory.configure( target, System.getProperties() );
+      configuration().target( target ).source( System.getProperties() ).inject();
       fail( "Expected an exception because the configuration values could not be populated." );
     } catch ( ConfigurationException e ) {
       assertThat( e.getMessage(), allOf(containsString("Failed"),containsString( "find" ),containsString( "required" )) );
@@ -293,7 +290,7 @@ public class FuncTests {
       }
     }
     Target target = new Target();
-    ConfigurationInjectorFactory.configure( target, System.getProperties() );
+    configuration().target( target ).source( System.getProperties() ).inject();
     assertThat( target.field, is( "default" ) );
   }
 
@@ -309,7 +306,7 @@ public class FuncTests {
       }
     }
     Target target = new Target();
-    ConfigurationInjectorFactory.configure( target, System.getProperties() );
+    configuration().target( target ).source( System.getProperties() ).inject();
     assertThat( target.field1, is( "default1" ) );
     assertThat( target.field2, is("default2") );
   }
@@ -328,7 +325,20 @@ public class FuncTests {
     Target target = new Target();
     Properties source = System.getProperties();
     ConfigurationBinding binding = new Binding();
-    ConfigurationInjectorFactory.create().configure( target, source, binding );
+    configuration().target( target ).source( source ).binding( binding ).inject();
+    assertThat( target.user, is(System.getProperty("user.name")));
+
+  }
+
+  @Test
+  public void testFieldBindingUsingBuilderBinding() {
+    class Target {
+      @Configure
+      private String user;
+    }
+    Target target = new Target();
+    Properties source = System.getProperties();
+    configuration().target( target ).source( source ).bind( "user", "user.name" ).inject();
     assertThat( target.user, is(System.getProperty("user.name")));
 
   }

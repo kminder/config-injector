@@ -27,5 +27,5 @@ import java.lang.annotation.Target;
 @Retention( RetentionPolicy.RUNTIME )
 @Documented
 public @interface Alias {
-  public String value() default "";
+  public String value();
 }

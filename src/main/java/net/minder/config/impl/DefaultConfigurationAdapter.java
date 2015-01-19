@@ -20,11 +20,11 @@ package net.minder.config.impl;
 import net.minder.config.ConfigurationAdapter;
 import net.minder.config.ConfigurationException;
 
-public class BeanConfigurationAdapter implements ConfigurationAdapter {
+public class DefaultConfigurationAdapter implements ConfigurationAdapter {
 
   private Object bean;
 
-  public BeanConfigurationAdapter( Object bean ) {
+  public DefaultConfigurationAdapter( Object bean ) {
     this.bean = bean;
   }
 
