@@ -1,2 +1,3 @@
 net.minder.config.impl.MapConfigurationAdapterDescriptor
 net.minder.config.impl.PropertiesConfigurationAdapterDescriptor
+net.minder.config.impl.BeanConfigurationAdapterDescriptor

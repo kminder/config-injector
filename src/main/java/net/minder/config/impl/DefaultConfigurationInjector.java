@@ -183,7 +183,7 @@ public class DefaultConfigurationInjector implements ConfigurationInjector {
           name, target.getClass().getName(), binding.getClass().getName() ), e );
     }
     if( bind == null ) {
-      bind = null;
+      bind = name;
     }
     return bind;
   }

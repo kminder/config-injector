@@ -27,7 +27,7 @@ public class UsageTest {
         .source( System.getProperties() )
         .bind( "user", "user.name" )
         .inject();
-    assertThat( target.user, is(System.getProperty("user.name")));
+    assertThat( target.user, is(System.getProperty("user.name")) );
   }
 
 }

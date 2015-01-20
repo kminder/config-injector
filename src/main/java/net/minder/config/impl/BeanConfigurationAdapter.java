@@ -19,18 +19,25 @@ package net.minder.config.impl;
 
 import net.minder.config.ConfigurationAdapter;
 import net.minder.config.ConfigurationException;
+import org.apache.commons.beanutils.PropertyUtils;
 
-public class DefaultConfigurationAdapter implements ConfigurationAdapter {
+public class BeanConfigurationAdapter implements ConfigurationAdapter {
 
   private Object bean;
 
-  public DefaultConfigurationAdapter( Object bean ) {
+  public BeanConfigurationAdapter( Object bean ) {
     this.bean = bean;
   }
 
   @Override
   public String getConfigurationValue( String name ) throws ConfigurationException {
-    return null;
+    try {
+      Object obj = PropertyUtils.getSimpleProperty( bean, name );
+      String str = obj != null ? obj.toString() : null;
+      return str;
+    } catch( Exception e ) {
+      throw new ConfigurationException( String.format( "" ), e );
+    }
   }
 
 }

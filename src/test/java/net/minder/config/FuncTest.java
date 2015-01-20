@@ -26,13 +26,12 @@ import java.util.Properties;
 
 import static net.minder.config.ConfigurationInjectorBuilder.configuration;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.AllOf.allOf;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.fail;
 
-public class FuncTests {
+public class FuncTest {
 
   public static class TestBean {
     @Configure
@@ -340,6 +339,39 @@ public class FuncTests {
     Properties source = System.getProperties();
     configuration().target( target ).source( source ).bind( "user", "user.name" ).inject();
     assertThat( target.user, is(System.getProperty("user.name")));
+
+  }
+
+  @Test
+  public void testFieldBindingUsingBuilderBindingFactory() {
+    class Target {
+      @Configure
+      private String user;
+    }
+    Target target = new Target();
+    Properties source = System.getProperties();
+    ConfigurationBinding binding = configuration().bind( "user", "user.name" ).binding();
+    configuration().target( target ).source( source ).binding( binding ).inject();
+    assertThat( target.user, is( System.getProperty( "user.name" ) ) );
+
+  }
+
+  public static class UserBean {
+    public String getPrincipal() {
+      return "test-user";
+    }
+  }
+
+  @Test
+  public void testBeanAdapter() {
+    Target target = new Target();
+    UserBean bean = new UserBean();
+    configuration()
+        .target( target )
+        .source( bean )
+        .bind( "user.name", "principal" )
+        .inject();
+    assertThat( target.user, is( "test-user" ) );
 
   }
 

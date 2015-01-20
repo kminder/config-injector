@@ -85,11 +85,15 @@ public class ConfigurationInjectorBuilder {
   }
 
   public ConfigurationInjectorBuilder bind( String targetName, String sourceName ) {
+    ((MappedConfigurationBinding)binding()).bind( targetName, sourceName );
+    return this;
+  }
+
+  public ConfigurationBinding binding() {
     if( binding == null ) {
       binding = new MappedConfigurationBinding();
     }
-    ((MappedConfigurationBinding)binding).bind( targetName, sourceName );
-    return this;
+    return binding;
   }
 
   public void inject() throws ConfigurationException {
